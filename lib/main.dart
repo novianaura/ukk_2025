@@ -20,13 +20,13 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Kasir',
-      home: loginPage(),
+      home: LoginPage(),
     );
   }
 }
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required username});
 
   @override
   State<HomePage> createState() => _HomePageState();
