@@ -48,14 +48,14 @@ class _LoginPageState extends State<LoginPage> {
         );
       } else {
         setState(() {
-          _usernameError = 'Username atau Password tidak valid';
-          _passwordError = 'Username atau Password tidak valid'; 
+          _usernameError = 'Username Salah';
+          _passwordError = 'Password Salah'; 
         });
       }
     } catch (e) {
       setState(() {
-        _usernameError = 'Username tidak valid';
-        _passwordError = 'Password tidak valid';
+        _usernameError = 'Username Salah';
+        _passwordError = 'Password Salah';
       });
       print("Error: $e"); 
     }
