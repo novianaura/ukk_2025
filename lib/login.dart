@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ukk_2025/main.dart';
+import 'home_page.dart';
+
 
 class LoginPage extends StatefulWidget {
   @override
@@ -18,15 +19,16 @@ class _LoginPageState extends State<LoginPage> {
     final username = usernameController.text.trim();
     final password = passwordController.text.trim();
 
+    //ketika username atau password tidak isi akan muncul validasi ini
     setState(() {
-      _usernameError = username.isEmpty ? 'Username tidak boleh kosong' : null;
-      _passwordError = password.isEmpty ? 'Password tidak boleh kosong' : null;
+      _usernameError = username.isEmpty ? 'Username kosong' : null;
+      _passwordError = password.isEmpty ? 'Password kosong' : null;
     });
 
     if (username.isEmpty || password.isEmpty) {
       return;
     }
-
+    //mengambil dari supabasenya
     try {
       final response = await Supabase.instance.client
           .from('users')
@@ -35,20 +37,18 @@ class _LoginPageState extends State<LoginPage> {
           .eq('password', password)
           .single();
 
-      print(response);
-
+      //untuk ketika data sudah valid akan mengirim ke halaman selanjutnya
       if (response.isNotEmpty) {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
-            builder: (context) => HomePage(
-              username: response['username'],
+            builder: (context) => HomePage(title: 'home',
             ),
           ),
         );
-      } else {
+      } else { //namun ketika username atau password yang dimasukkan salah akan muncul validasi ini
         setState(() {
-          _usernameError = 'Username Salah';
+          _usernameError = 'Username Salah' ;
           _passwordError = 'Password Salah'; 
         });
       }
@@ -57,7 +57,6 @@ class _LoginPageState extends State<LoginPage> {
         _usernameError = 'Username Salah';
         _passwordError = 'Password Salah';
       });
-      print("Error: $e"); 
     }
   }
 
@@ -69,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
         child: SingleChildScrollView(
           child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(15),
@@ -93,7 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextField(
                   controller: usernameController,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.person, color: Colors.blue[900]),
+                    prefixIcon: Icon(Icons.person, color: Colors.black),
                     hintText: "Username",
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
                     errorText: _usernameError,
@@ -106,7 +105,16 @@ class _LoginPageState extends State<LoginPage> {
                   controller: passwordController,
                   obscureText: _obscureText,
                   decoration: InputDecoration(
-                    prefixIcon: Icon(Icons.lock, color: Colors.blue[900]),
+                    prefixIcon: Icon(Icons.lock, color: Colors.black),
+                    //ini untuk bagian icon mata di password agar bisa dilihat atau tidak
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscureText ? Icons.visibility : Icons.visibility_off, color: Colors.black),
+                      onPressed: () {
+                        setState(() {
+                          _obscureText = !_obscureText;
+                        });
+                      },
+                    ),
                     hintText: "Password",
                     border: OutlineInputBorder(borderRadius: BorderRadius.circular(15.0)),
                     errorText: _passwordError,
@@ -116,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 20),
                 MaterialButton(
-                      onPressed: () {},
+                  onPressed: () => login(context), //untuk proses login
                       color: Color(0xff3a57e8),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -135,7 +143,8 @@ class _LoginPageState extends State<LoginPage> {
                       height: 50,
                       minWidth: MediaQuery.of(context).size.width,
                     ),
-              ]
+                SizedBox(height: 20),
+              ],
             ),
           ),
         ),
