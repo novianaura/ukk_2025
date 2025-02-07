@@ -8,7 +8,7 @@ Future<void> main() async {
     url: 'https://hhndwcfqiehjcylywqcz.supabase.co',
     anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhobmR3Y2ZxaWVoamN5bHl3cWN6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3MTM1NjUsImV4cCI6MjA1NDI4OTU2NX0.qWWqzGdfsmHCp6QW9rqshIsZ6nxS4fH-4Nh-rq7OABY',
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 
