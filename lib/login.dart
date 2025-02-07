@@ -69,17 +69,7 @@ class _LoginPageState extends State<LoginPage> {
           child: Container(
             width: MediaQuery.of(context).size.width * 0.9,
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.2),
-                  blurRadius: 5,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
+            
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,

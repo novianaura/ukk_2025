@@ -1,83 +1,64 @@
 import 'package:flutter/material.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
-  
   final String title;
 
- @override
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xffffffff),
+      backgroundColor: const Color(0xffffffff),
       appBar: AppBar(
         elevation: 0,
         centerTitle: true,
         automaticallyImplyLeading: false,
-        backgroundColor: Color(0x00ffffff),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.zero,
-        ),
-        title: Text(
+        backgroundColor: const Color(0x00ffffff),
+        title: const Text(
           "Administrasi",
           style: TextStyle(
             fontWeight: FontWeight.w400,
-            fontStyle: FontStyle.normal,
             fontSize: 14,
             color: Color(0xff000000),
           ),
         ),
-        leading: Icon(
-
-          Icons.sort,
-          color: Color(0xff212435),
-          size: 24,
-          
+        leading: IconButton(
+          icon: const Icon(Icons.sort, color: Color(0xff212435)),
+          onPressed: () {
+            Scaffold.of(context).openDrawer();
+          },
         ),
         actions: [
-          Icon(Icons.search, color: Color(0xff212435), size: 24),
+          IconButton(
+            icon: const Icon(Icons.search, color: Color(0xff212435)),
+            onPressed: () {},
+          ),
         ],
       ),
-      // drawer: buildGroupDrawer(context),
-    );
-
-  Widget buildGroupDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(padding: EdgeInsets.zero, children: <Widget>[
-        ListTile(
-          title: const Text('Produk'),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-        ListTile(
-          title: const Text('Transaksi'),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-        ListTile(
-          title: const Text('Riwayat'),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-        ListTile(
-          title: const Text('Pelanggan'),
-          onTap: () {
-            Navigator.pop(context);
-          },
-        ),
-      ]),
-    );
-
-    @override
-    Widget build(BuildContext context) {
-      BottomNavigationBar(items: const <BottomNavigationBarItem>[
-        BottomNavigationBarItem(
-          icon: Icon(Icons.shopping_cart),
-          label: 'Produk',
-        ),
-        BottomNavigationBarItem(
+      drawer: buildGroupDrawer(context),
+      bottomNavigationBar: BottomNavigationBar(
+        currentIndex: _selectedIndex,
+        onTap: _onItemTapped,
+        selectedItemColor: Colors.blue,
+        unselectedItemColor: Colors.grey,
+        items: const [
+          BottomNavigationBarItem(
+            icon: Icon(Icons.shopping_cart),
+            label: 'Produk',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.credit_card),
             label: 'Transaksi',
           ),
@@ -90,8 +71,38 @@ class HomePage extends StatelessWidget {
             label: 'Pelanggan',
           ),
         ],
-      );
-    }
+      ),
+    );
   }
-}
+
+  Widget buildGroupDrawer(BuildContext context) {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Colors.blue),
+            child: Text('Menu',
+                style: TextStyle(color: Colors.white, fontSize: 20)),
+          ),
+          ListTile(
+            title: const Text('Produk'),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            title: const Text('Transaksi'),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            title: const Text('Riwayat'),
+            onTap: () => Navigator.pop(context),
+          ),
+          ListTile(
+            title: const Text('Pelanggan'),
+            onTap: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
 }
