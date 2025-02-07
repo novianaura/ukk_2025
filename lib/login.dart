@@ -124,7 +124,7 @@ class _LoginPageState extends State<LoginPage> {
                 ),
                 SizedBox(height: 20),
                 MaterialButton(
-                  onPressed: () => login(context), //untuk proses login
+                  onPressed: () => login(context), //untuk proses login agar bisa berfungsi
                       color: Color(0xff3a57e8),
                       elevation: 0,
                       shape: RoundedRectangleBorder(
