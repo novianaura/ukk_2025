@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ukk_2025/login.dart';
+import 'produk.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -11,10 +14,25 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
 
+  final List<Widget> _pages = [
+    const Produk(),
+    const Center(child: Text('Transaksi')),
+    const Center(child: Text('Riwayat')),  
+    const Center(child: Text('Pelanggan')), 
+  ];
+
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  Future<void> _logout(BuildContext context) async {
+    await Supabase.instance.client.auth.signOut();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (context) => LoginPage()),
+    );
   }
 
   @override
@@ -34,25 +52,20 @@ class _HomePageState extends State<HomePage> {
             color: Color(0xff000000),
           ),
         ),
-        leading: IconButton(
-          icon: const Icon(Icons.sort, color: Color(0xff212435)),
-          onPressed: () {
-            Scaffold.of(context).openDrawer();
-          },
-        ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.search, color: Color(0xff212435)),
-            onPressed: () {},
+            icon: const Icon(Icons.logout, color: Colors.black),
+            onPressed: () => _logout(context),
           ),
         ],
       ),
-      drawer: buildGroupDrawer(context),
+      body: _pages[_selectedIndex], 
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.blue,
+        selectedItemColor: Colors.blue[900],
         unselectedItemColor: Colors.grey,
+        backgroundColor: Colors.blue, // Set the background color of the bottom nav
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),
@@ -69,37 +82,6 @@ class _HomePageState extends State<HomePage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: 'Pelanggan',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget buildGroupDrawer(BuildContext context) {
-    return Drawer(
-      child: ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          const DrawerHeader(
-            decoration: BoxDecoration(color: Colors.blue),
-            child: Text('Menu',
-                style: TextStyle(color: Colors.white, fontSize: 20)),
-          ),
-          ListTile(
-            title: const Text('Produk'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            title: const Text('Transaksi'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            title: const Text('Riwayat'),
-            onTap: () => Navigator.pop(context),
-          ),
-          ListTile(
-            title: const Text('Pelanggan'),
-            onTap: () => Navigator.pop(context),
           ),
         ],
       ),
