@@ -15,50 +15,49 @@ class _LoginPageState extends State<LoginPage> {
   String? _usernameError;
   String? _passwordError;
 
-  Future<void> login(BuildContext context) async {
-    final username = usernameController.text.trim();
-    final password = passwordController.text.trim();
+Future<void> login(BuildContext context) async {
+  final username = usernameController.text.trim();
+  final password = passwordController.text.trim();
 
-    //ketika username atau password tidak isi akan muncul validasi ini
-    setState(() {
-      _usernameError = username.isEmpty ? 'Username kosong' : null;
-      _passwordError = password.isEmpty ? 'Password kosong' : null;
-    });
+  setState(() {
+    _usernameError = username.isEmpty ? 'Username kosong' : null;
+    _passwordError = password.isEmpty ? 'Password kosong' : null;
+  });
 
-    if (username.isEmpty || password.isEmpty) {
-      return;
-    }
-    //mengambil dari supabasenya
-    try {
-      final response = await Supabase.instance.client
-          .from('users')
-          .select()
-          .eq('username', username)
-          .eq('password', password)
-          .single();
+  if (username.isEmpty || password.isEmpty) {
+    return;
+  }
 
-      //untuk ketika data sudah valid akan mengirim ke halaman selanjutnya
-      if (response.isNotEmpty) {
+  try {
+    final response = await Supabase.instance.client
+        .from('users')
+        .select()
+        .eq('username', username)
+        .single();
+
+    if (response.isNotEmpty) {
+      final dbPassword = response['password'];
+
+      if (dbPassword == password) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => HomePage(title: 'home',
-            ),
-          ),
+          MaterialPageRoute(builder: (context) => HomePage(title: 'home')),
         );
-      } else { //namun ketika username atau password yang dimasukkan salah akan muncul validasi ini
+      } else {
         setState(() {
-          _usernameError = 'Username Salah' ;
-          _passwordError = 'Password Salah'; 
+          _passwordError = 'Password Salah';
+          _usernameError = null; // Karena username benar, kita tidak perlu menampilkan error username
         });
       }
-    } catch (e) {
-      setState(() {
-        _usernameError = 'Username Salah';
-        _passwordError = 'Password Salah';
-      });
-    }
+    } 
+  } catch (e) {
+    setState(() {
+      _usernameError = 'Username Salah';
+      _passwordError = null; 
+    });
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +73,7 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                SizedBox(height: 20),
+                const SizedBox(height: 20,),
                 Text("Welcome", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 26)),
                 SizedBox(height: 10),
                 Text("Please login to continue", style: TextStyle(color: Colors.black54, fontSize: 16)),
