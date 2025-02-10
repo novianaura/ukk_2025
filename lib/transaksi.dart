@@ -32,7 +32,7 @@ class _TransaksiState extends State<Transaksi> {
         transaksiList[index]['jumlah'] = newJumlah;
         transaksiList[index]['subtotal'] = newJumlah * harga;
       }
-      _hitungTotal();
+      _hitungTotal(); // Update total harga setelah jumlah berubah
     });
   }
 

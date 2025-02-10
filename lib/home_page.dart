@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'login.dart';
 import 'produk.dart';
 import 'pelanggan.dart';
+import 'transaksi.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -66,7 +67,7 @@ class _HomePageState extends State<HomePage> {
         onTap: _onItemTapped,
         selectedItemColor: Colors.blue[900],
         unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.blue, // Set the background color of the bottom nav
+        backgroundColor: Colors.blue, 
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),

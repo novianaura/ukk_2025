@@ -3,9 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ukk_2025/transaksi.dart';
 
 class Produk extends StatefulWidget {
-  const Produk({super.key});
-  
-  get transaksiList => null;
+  const Produk({super.key, required Null Function(dynamic produk) addToTransaksi});
 
   @override
   _ProdukState createState() => _ProdukState();
@@ -14,6 +12,7 @@ class Produk extends StatefulWidget {
 class _ProdukState extends State<Produk> {
   List<Map<String, dynamic>> produkList = [];
   List<Map<String, dynamic>> filteredProducts = [];
+
   TextEditingController searchController = TextEditingController();
 
   @override
@@ -152,9 +151,11 @@ class _ProdukState extends State<Produk> {
                       {'nama_produk': name, 'harga': price, 'stok': stock},
                     ]).select();
 
-                    if (response != null && response is List && response.isNotEmpty) {
+                    if (response != null &&
+                        response is List &&
+                        response.isNotEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content:Text('Produk berhasil ditambahkan')),
+                        SnackBar(content: Text('Produk berhasil ditambahkan')),
                       );
                       _fetchProduk(); // Perbarui tampilan
                     } else {
@@ -180,8 +181,9 @@ class _ProdukState extends State<Produk> {
 
   // Fungsi untuk mengedit produk
   Future<void> _editProduk(
-    BuildContext context, Map<String, dynamic> produk) async {
-    TextEditingController nameController = TextEditingController(text: produk['name']);
+      BuildContext context, Map<String, dynamic> produk) async {
+    TextEditingController nameController =
+        TextEditingController(text: produk['name']);
     TextEditingController priceController =
         TextEditingController(text: produk['price'].toString());
     TextEditingController stockController =
@@ -207,7 +209,7 @@ class _ProdukState extends State<Produk> {
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Nama kosong';
+                      return 'Nama produk kosong';
                     }
                     return null;
                   },
@@ -348,34 +350,6 @@ class _ProdukState extends State<Produk> {
     }
   }
 
-//fungsi untuk menambahkan data produk ke transaksi
-void _tambahKeTransaksi(Map<String, dynamic> produk) {
-  setState(() {
-    // Menambahkan produk ke dalam daftar transaksi (keranjang)
-    final transaksiBaru = {
-      'produk_id': produk['produk_id'],
-      'nama_produk': produk['name'],
-      'harga': produk['price'],
-      'jumlah': 1,
-      'subtotal': produk['price'],
-    };
-
-    widget.transaksiList.add(transaksiBaru); // Menambahkannya ke transaksiList
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Produk ditambahkan ke transaksi: ${produk['name']}')),
-    );
-  });
-  Navigator.push(
-  context,
-  MaterialPageRoute(
-    builder: (context) => Transaksi(
-      transaksiList: widget.transaksiList, // Meneruskan transaksiList yang diperbarui
-    ),
-  ),
-);
-
-}
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -423,28 +397,40 @@ void _tambahKeTransaksi(Map<String, dynamic> produk) {
                                 onPressed: () => _editProduk(context, product),
                               ),
                               IconButton(
-                                icon: const Icon(Icons.shopping_cart),
+                                icon: Icon(Icons.shopping_cart),
                                 onPressed: () {
-                                  _tambahKeTransaksi(product);
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                        content: Text(
-                                            'Ditambahkan ke keranjang: ${product['name']}')),
-                                  );
-                                },
-                              ),
-                            ],
-                          ),
-                        );
-                      })),
-                 ],
-              ),
-            floatingActionButton: FloatingActionButton(
-              onPressed: () {
-              _tambahProduk(context); 
+    // Assume transaksiList is a state or a list in your main widget to store the selected products.
+                                final selectedProduct = {
+                                  'produk_id': product['produk_id'],
+                                  'nama_produk': product['name'],
+                                  'harga': product['price'],
+                                  'jumlah': 1,  // Default quantity when added
+                                  'subtotal': product['price'],  // Default subtotal (price * quantity)
+                                };
+
+    // Navigate to Transaksi screen and pass selected product
+                  Navigator.push(
+                  context,
+                   MaterialPageRoute(
+                     builder: (context) => Transaksi(transaksiList: [selectedProduct]),
+                  ),
+                );
               },
-              child: Icon(Icons.add),
-              ),
+            ),
+            ],
+          ),
+    );
+})),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          _tambahProduk(context);
+        },
+        child: Icon(Icons.add),
+      ),
     );
   }
 }
+
+//buat ketika icon keranjang diklik, data produknya bisa beralih tertambahkan ke halaman transaksi, dan buat tampilan transaksi produk

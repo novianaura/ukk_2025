@@ -309,9 +309,6 @@ class _PelangganState extends State<Pelanggan> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Pelanggan'),
-      ),
       body: Column(
         children: [
           Padding(
