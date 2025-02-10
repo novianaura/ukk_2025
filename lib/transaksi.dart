@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 class Transaksi extends StatefulWidget {
   final List<Map<String, dynamic>> transaksiList;
@@ -18,13 +17,16 @@ class _TransaksiState extends State<Transaksi> {
   void initState() {
     super.initState();
     transaksiList = widget.transaksiList;
+    print('Data transaksi yang diterima: $transaksiList'); // Debug print
     _hitungTotal();
   }
 
+  // Menghitung total harga dari semua produk di keranjang
   void _hitungTotal() {
     totalHarga = transaksiList.fold(0, (int sum, item) => sum + (item["subtotal"] as int));
   }
 
+  // Fungsi untuk mengubah jumlah produk di keranjang
   void _ubahJumlah(int id, int newJumlah, int harga) {
     setState(() {
       final index = transaksiList.indexWhere((item) => item['produk_id'] == id);
@@ -32,10 +34,11 @@ class _TransaksiState extends State<Transaksi> {
         transaksiList[index]['jumlah'] = newJumlah;
         transaksiList[index]['subtotal'] = newJumlah * harga;
       }
-      _hitungTotal(); // Update total harga setelah jumlah berubah
+      _hitungTotal();  // Update total harga setelah jumlah berubah
     });
   }
 
+  // Fungsi untuk memproses pembayaran dan mengosongkan keranjang
   void _prosesPembayaran() {
     setState(() {
       transaksiList.clear(); // Mengosongkan keranjang setelah pembayaran
@@ -60,20 +63,21 @@ class _TransaksiState extends State<Transaksi> {
                     itemCount: transaksiList.length,
                     itemBuilder: (context, index) {
                       final item = transaksiList[index];
+                      print('Menampilkan produk: ${item['name']}');  // Debug print
                       return ListTile(
-                        title: Text(item['nama_produk']),
+                        title: Text(item['name']),
                         subtitle: Text('Subtotal: ${item['subtotal']}'),
                         trailing: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             IconButton(
                               icon: const Icon(Icons.remove),
-                              onPressed: () => _ubahJumlah(item['produk_id'], item['jumlah'] - 1, item['harga']),
+                              onPressed: () => _ubahJumlah(item['produk_id'], item['jumlah'] - 1, item['price']),
                             ),
                             Text('${item['jumlah']}'),
                             IconButton(
                               icon: const Icon(Icons.add),
-                              onPressed: () => _ubahJumlah(item['produk_id'], item['jumlah'] + 1, item['harga']),
+                              onPressed: () => _ubahJumlah(item['produk_id'], item['jumlah'] + 1, item['price']),
                             ),
                           ],
                         ),
