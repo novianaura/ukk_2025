@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ukk_2025/login.dart';
+import 'login.dart';
 import 'produk.dart';
+import 'pelanggan.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.title});
@@ -17,8 +18,8 @@ class _HomePageState extends State<HomePage> {
   final List<Widget> _pages = [
     const Produk(),
     const Center(child: Text('Transaksi')),
-    const Center(child: Text('Riwayat')),  
-    const Center(child: Text('Pelanggan')), 
+    const Center(child: Text('Riwayat')),
+    const Pelanggan(),  
   ];
 
   void _onItemTapped(int index) {

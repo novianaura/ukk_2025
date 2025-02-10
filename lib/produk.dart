@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ukk_2025/transaksi.dart';
 
 class Produk extends StatefulWidget {
   const Produk({super.key});
+  
+  get transaksiList => null;
 
   @override
   _ProdukState createState() => _ProdukState();
@@ -16,31 +19,29 @@ class _ProdukState extends State<Produk> {
   @override
   void initState() {
     super.initState();
-    _fetchProduk(); // Memuat data produk saat halaman diinisialisasi
+    _fetchProduk();
   }
 
   // Fungsi untuk memuat data produk dari Supabase
   Future<void> _fetchProduk() async {
     try {
-      final response = await Supabase.instance.client
-          .from('produk')
-          .select();
+      final response = await Supabase.instance.client.from('produk').select();
 
       setState(() {
         produkList = response.map<Map<String, dynamic>>((item) {
           return {
-            'id': item['id'],
-            'name': item['nama_produk'],
-            'price': item['harga'],
-            'stock': item['stok'],
+            'produk_id': item['produk_id'] ?? 0,
+            'name': item['nama_produk'] ?? '',
+            'price': item['harga'] ?? 0,
+            'stock': item['stok'] ?? 0,
           };
         }).toList();
         filteredProducts = List.from(produkList);
       });
     } catch (e) {
-      print('Error fetching produk: $e');
+      print('Terjadi kesalahan saat mengambil produk: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching produk: $e')),
+        SnackBar(content: Text('Terjadi kesalahan saat mengambil produk: $e')),
       );
     }
   }
@@ -62,79 +63,111 @@ class _ProdukState extends State<Produk> {
     TextEditingController nameController = TextEditingController();
     TextEditingController priceController = TextEditingController();
     TextEditingController stockController = TextEditingController();
+    final _formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Tambah Produk', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Nama Produk',
-                  hintText: 'Masukkan nama produk',
+          title: Text('Tambah Produk',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Produk',
+                    hintText: 'Masukkan nama produk',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Nama kosong';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Harga Produk',
-                  hintText: 'Masukkan harga produk',
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Harga Produk',
+                    hintText: 'Masukkan harga produk',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Harga kosong';
+                    }
+                    final price = int.tryParse(value);
+                    if (price == null) {
+                      return 'Harga tidak valid';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: stockController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Stok Produk',
-                  hintText: 'Masukkan stok produk',
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: stockController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Stok Produk',
+                    hintText: 'Masukkan stok produk',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Stok kosong';
+                    }
+                    final stock = int.tryParse(value);
+                    if (stock == null) {
+                      return 'Stok tidak valid';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text('Batal', style: TextStyle(color: Colors.red)),
+              child: Text('Batal', style: TextStyle(color: Colors.black)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
               onPressed: () async {
-                final name = nameController.text;
-                final price = int.tryParse(priceController.text) ?? 0;
-                final stock = int.tryParse(stockController.text) ?? 0;
+                if (_formKey.currentState?.validate() ?? false) {
+                  final name = nameController.text;
+                  final price = int.tryParse(priceController.text) ?? 0;
+                  final stock = int.tryParse(stockController.text) ?? 0;
 
-                try {
-                  final response = await Supabase.instance.client
-                      .from('product')
-                      .insert([
-                        {'nama_produk': name, 'harga': price, 'stok': stock},
-                      ])
-                      .select();
+                  try {
+                    final response =
+                        await Supabase.instance.client.from('produk').insert([
+                      {'nama_produk': name, 'harga': price, 'stok': stock},
+                    ]).select();
 
-                  if (response.isNotEmpty) {
+                    if (response != null && response is List && response.isNotEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content:Text('Produk berhasil ditambahkan')),
+                      );
+                      _fetchProduk(); // Perbarui tampilan
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Produk gagal ditambahkan.')),
+                      );
+                    }
+                    Navigator.pop(context);
+                  } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Produk baru ditambahkan ke database!')),
-                    );
-                    _fetchProduk(); // Perbarui tampilan
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Produk gagal ditambahkan.')),
+                      SnackBar(content: Text('Error occurred: $e')),
                     );
                   }
-                  Navigator.pop(context);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error occurred: $e')),
-                  );
                 }
               },
               child: Text('Tambah', style: TextStyle(color: Colors.white)),
@@ -146,45 +179,79 @@ class _ProdukState extends State<Produk> {
   }
 
   // Fungsi untuk mengedit produk
-  Future<void> _editProduk(BuildContext context, Map<String, dynamic> produk) async {
+  Future<void> _editProduk(
+    BuildContext context, Map<String, dynamic> produk) async {
     TextEditingController nameController = TextEditingController(text: produk['name']);
-    TextEditingController priceController = TextEditingController(text: produk['price'].toString());
-    TextEditingController stockController = TextEditingController(text: produk['stock'].toString());
+    TextEditingController priceController =
+        TextEditingController(text: produk['price'].toString());
+    TextEditingController stockController =
+        TextEditingController(text: produk['stock'].toString());
+    final _formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text('Edit Produk', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: InputDecoration(
-                  labelText: 'Nama Produk',
-                  hintText: 'Masukkan nama produk',
+          title: Text('Edit Produk',
+              style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Nama Produk',
+                    hintText: 'Masukkan nama produk',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Nama kosong';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: priceController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Harga Produk',
-                  hintText: 'Masukkan harga produk',
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: priceController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Harga Produk',
+                    hintText: 'Masukkan harga produk',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Harga kosong';
+                    }
+                    final price = int.tryParse(value);
+                    if (price == null) {
+                      return 'Harga tidak valid';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 10),
-              TextField(
-                controller: stockController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: 'Stok Produk',
-                  hintText: 'Masukkan stok produk',
+                SizedBox(height: 10),
+                TextFormField(
+                  controller: stockController,
+                  keyboardType: TextInputType.number,
+                  decoration: InputDecoration(
+                    labelText: 'Stok Produk',
+                    hintText: 'Masukkan stok produk',
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Stok kosong';
+                    }
+                    final stock = int.tryParse(value);
+                    if (stock == null) {
+                      return 'Stok tidak valid';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actions: [
             TextButton(
@@ -192,37 +259,63 @@ class _ProdukState extends State<Produk> {
               child: Text('Batal', style: TextStyle(color: Colors.black)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
+              style:
+                  ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
               onPressed: () async {
-                final updatedName = nameController.text;
-                final updatedPrice = int.tryParse(priceController.text) ?? produk['price'];
-                final updatedStock = int.tryParse(stockController.text) ?? produk['stock'];
+                if (_formKey.currentState?.validate() ?? false) {
+                  final updatedName = nameController.text.isNotEmpty
+                      ? nameController.text
+                      : produk['name'];
+                  final updatedPrice = priceController.text.isNotEmpty
+                      ? int.tryParse(priceController.text)
+                      : produk['price'];
+                  final updatedStock = stockController.text.isNotEmpty
+                      ? int.tryParse(stockController.text)
+                      : produk['stock'];
 
-                try {
-                  final response = await Supabase.instance.client
-                      .from('product')
-                      .update({
-                        'nama_produk': updatedName,
-                        'harga': updatedPrice,
-                        'stok': updatedStock,
-                      })
-                      .eq('id', produk['id']);
+                  try {
+                    final response = await Supabase.instance.client
+                        .from('produk')
+                        .update({
+                          'nama_produk': updatedName,
+                          'harga': updatedPrice,
+                          'stok': updatedStock,
+                        })
+                        .eq('produk_id', produk['produk_id'])
+                        .select(); // Menggunakan .select() untuk mengambil data setelah update
 
-                  if (response.isNotEmpty) {
+                    if (response != null &&
+                        response is List &&
+                        response.isNotEmpty) {
+                      // Find the index of the product in the filteredProducts list
+                      final index = filteredProducts.indexWhere(
+                          (prod) => prod['produk_id'] == produk['produk_id']);
+                      if (index != -1) {
+                        // Update the product in the list at the same index
+                        setState(() {
+                          filteredProducts[index] = {
+                            'produk_id': produk['produk_id'],
+                            'name': updatedName,
+                            'price': updatedPrice,
+                            'stock': updatedStock,
+                          };
+                        });
+                      }
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Produk berhasil diperbarui!')),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Gagal memperbarui produk.')),
+                      );
+                    }
+                    Navigator.pop(context);
+                  } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Produk berhasil diperbarui!')),
-                    );
-                    _fetchProduk(); // Perbarui tampilan
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Gagal memperbarui produk.')),
+                      SnackBar(content: Text('Error occurred: $e')),
                     );
                   }
-                  Navigator.pop(context);
-                } catch (e) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error occurred: $e')),
-                  );
                 }
               },
               child: Text('Simpan', style: TextStyle(color: Colors.white)),
@@ -234,15 +327,15 @@ class _ProdukState extends State<Produk> {
   }
 
   // Fungsi untuk menghapus produk
-  Future<void> _hapusProduk(BuildContext context, int id) async {
+  Future<void> _hapusProduk(BuildContext context, int _produk_id) async {
     try {
       final response = await Supabase.instance.client
-          .from('product')
+          .from('produk')
           .delete()
-          .eq('id', id)
+          .eq('produk_id', _produk_id)
           .select();
 
-      if (response.isNotEmpty) {
+      if (response != null && response is List && response.isNotEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Produk berhasil dihapus!')),
         );
@@ -254,6 +347,34 @@ class _ProdukState extends State<Produk> {
       );
     }
   }
+
+//fungsi untuk menambahkan data produk ke transaksi
+void _tambahKeTransaksi(Map<String, dynamic> produk) {
+  setState(() {
+    // Menambahkan produk ke dalam daftar transaksi (keranjang)
+    final transaksiBaru = {
+      'produk_id': produk['produk_id'],
+      'nama_produk': produk['name'],
+      'harga': produk['price'],
+      'jumlah': 1,
+      'subtotal': produk['price'],
+    };
+
+    widget.transaksiList.add(transaksiBaru); // Menambahkannya ke transaksiList
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Produk ditambahkan ke transaksi: ${produk['name']}')),
+    );
+  });
+  Navigator.push(
+  context,
+  MaterialPageRoute(
+    builder: (context) => Transaksi(
+      transaksiList: widget.transaksiList, // Meneruskan transaksiList yang diperbarui
+    ),
+  ),
+);
+
+}
 
   @override
   Widget build(BuildContext context) {
@@ -278,38 +399,52 @@ class _ProdukState extends State<Produk> {
             ),
           ),
           Expanded(
-            child: filteredProducts.isEmpty
-                ? const Center(child: Text('Tidak ada produk ditemukan.'))
-                : ListView.builder(
-                    itemCount: filteredProducts.length,
-                    itemBuilder: (context, index) {
-                      final product = filteredProducts[index];
-                      return ListTile(
-                        title: Text(product['name']),
-                        subtitle: Text('Harga: ${product['price']} | Stok: ${product['stock']}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () => _editProduk(context, product),
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () => _hapusProduk(context, product['id']),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _tambahProduk(context),
-        child: const Icon(Icons.add),
-      ),
+              child: filteredProducts.isEmpty
+                  ? Center(child: Text('Tidak ada produk ditemukan.'))
+                  : ListView.builder(
+                      itemCount: filteredProducts.length,
+                      itemBuilder: (context, index) {
+                        final product = filteredProducts[index];
+                        return ListTile(
+                          title: Text(product['name']),
+                          subtitle: Text(
+                              'Harga: ${product['price']} | Stok: ${product['stock']}'),
+                          trailing: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red),
+                                onPressed: () {
+                                  _hapusProduk(context, product['produk_id']);
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.edit),
+                                onPressed: () => _editProduk(context, product),
+                              ),
+                              IconButton(
+                                icon: const Icon(Icons.shopping_cart),
+                                onPressed: () {
+                                  _tambahKeTransaksi(product);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                        content: Text(
+                                            'Ditambahkan ke keranjang: ${product['name']}')),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      })),
+                 ],
+              ),
+            floatingActionButton: FloatingActionButton(
+              onPressed: () {
+              _tambahProduk(context); 
+              },
+              child: Icon(Icons.add),
+              ),
     );
   }
 }
