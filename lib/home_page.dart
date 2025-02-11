@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ukk_2025/login.dart';
+import 'package:ukk_2025/riwayat.dart';
 import 'produk.dart';
 import 'pelanggan.dart';
 import 'transaksi.dart'; // Import the Transaksi page
@@ -29,10 +30,10 @@ class _HomePageState extends State<HomePage> {
     _fetchCustomers();  // Panggil fungsi untuk mengambil data pelanggan
 
     _pages.addAll([
-      Produk(addToTransaksi: addToTransaksi),
-      TransaksiPage(transaksiItems: transaksiItems, customers: customers),  
-      const Center(child: Text('Riwayat')),
-      const Pelanggan(),
+  Produk(addToTransaksi: addToTransaksi),
+  TransaksiPage(transaksiItems: transaksiItems, customers: customers),  
+  RiwayatPage(transaksiItems: transaksiItems), // Perbaiki disini
+  const Pelanggan(),
 ]);
 
     // Ambil data user login

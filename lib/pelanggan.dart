@@ -146,21 +146,21 @@ Future<void> _tambahPelanggan(BuildContext context) async {
             onPressed: () async {
               if (_formKey.currentState?.validate() ?? false) {
                 final name = nameController.text;
+                final phone = phoneController.text;
 
-                // Cek apakah nama pelanggan sudah ada
-                bool isDuplicate = pelangganList.any((customer) =>
-                    customer['nama_pelanggan'].toLowerCase() == name.toLowerCase());
+                // Cek apakah nomor telepon sudah ada
+                bool isDuplicatePhone = pelangganList.any((customer) =>
+                    customer['nomor_telepon'] == phone);
 
-                if (isDuplicate) {
+                if (isDuplicatePhone) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Nama pelanggan sudah ada!')),
+                    SnackBar(content: Text('Nomor telepon sudah digunakan!')),
                   );
                   Navigator.pop(context); // Tutup dialog jika duplikat
                   return;
                 }
 
                 final address = addressController.text;
-                final phone = phoneController.text;
 
                 try {
                   final response = await Supabase.instance.client
