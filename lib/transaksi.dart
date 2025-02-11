@@ -3,16 +3,20 @@ import 'package:ukk_2025/penjualan.dart';
 
 class TransaksiPage extends StatefulWidget {
   final List<Map<String, dynamic>> transaksiItems;
+  final List<Map<String, dynamic>>
+      customers; // Daftar pelanggan yang dikirim dari HomePage
 
-  const TransaksiPage({Key? key, required this.transaksiItems}) : super(key: key);
+  const TransaksiPage(
+      {Key? key, required this.transaksiItems, required this.customers})
+      : super(key: key);
 
   @override
   _TransaksiPageState createState() => _TransaksiPageState();
 }
 
 class _TransaksiPageState extends State<TransaksiPage> {
-  String? selectedCustomer;  // Variable to hold the selected customer
-  List<String> customers = ['Pelanggan 1', 'Pelanggan 2', 'Pelanggan 3']; // Example customer list
+  String?
+      selectedCustomer; // Untuk menyimpan pelanggan yang dipilih di dropdown
 
   double _calculateTotal() {
     double total = 0;
@@ -24,27 +28,15 @@ class _TransaksiPageState extends State<TransaksiPage> {
     return total;
   }
 
-  void _updateQuantity(int index, int delta) {
-    setState(() {
-      final product = widget.transaksiItems[index];
-      product['quantity'] = (product['quantity'] ?? 1) + delta;
-
-      // If the quantity is less than or equal to zero, remove the product from the list
-      if (product['quantity'] <= 0) {
-        widget.transaksiItems.removeAt(index);
-      } else {
-        // Ensure quantity does not go negative
-        product['quantity'] = product['quantity'] ?? 1;
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
+    print(widget.customers
+        .map((customer) => customer['nama_pelanggan'])
+        .toList());
     return Scaffold(
       body: Column(
         children: [
-          // Customer dropdown is visible from the start
+          // Dropdown untuk memilih pelanggan
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Container(
@@ -63,17 +55,27 @@ class _TransaksiPageState extends State<TransaksiPage> {
                 },
                 isExpanded: true,
                 underline: SizedBox(),
-                items: customers.map<DropdownMenuItem<String>>((String customer) {
-                  return DropdownMenuItem<String>(
-                    value: customer,
-                    child: Text(customer),
-                  );
-                }).toList(),
+                items: widget.customers.isNotEmpty
+                    ? widget.customers
+                        .map<DropdownMenuItem<String>>((customer) {
+                        return DropdownMenuItem<String>(
+                          value: customer['pelanggan_id']
+                              .toString(), 
+                          child: Text(customer[
+                              'nama_pelanggan']), 
+                        );
+                      }).toList()
+                    : [
+                        DropdownMenuItem<String>(
+                          value: null,
+                          child: Text('Tidak ada pelanggan ditemukan'),
+                        )
+                      ],
               ),
             ),
           ),
 
-          // Product List Section
+          // Menampilkan produk yang ada di transaksi
           widget.transaksiItems.isEmpty
               ? Center(child: Text('Tidak ada produk di transaksi.'))
               : Expanded(
@@ -86,8 +88,9 @@ class _TransaksiPageState extends State<TransaksiPage> {
                       final subtotal = price * quantity;
 
                       return Card(
-                        key: ValueKey(index), // Use ValueKey to prevent unnecessary rebuilds
-                        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                        key: ValueKey(index),
+                        margin:
+                            EdgeInsets.symmetric(vertical: 5, horizontal: 10),
                         child: Padding(
                           padding: const EdgeInsets.all(10),
                           child: Row(
@@ -98,7 +101,9 @@ class _TransaksiPageState extends State<TransaksiPage> {
                                 children: [
                                   Text(
                                     product['name'],
-                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16),
                                   ),
                                   SizedBox(height: 5),
                                   Text(
@@ -111,16 +116,22 @@ class _TransaksiPageState extends State<TransaksiPage> {
                                 children: [
                                   IconButton(
                                     icon: Icon(Icons.remove),
-                                    onPressed: () => _updateQuantity(index, -1),
+                                    onPressed: () {
+                                      _updateQuantity(index, -1);
+                                    },
                                     color: Colors.red,
                                   ),
                                   Text(
                                     '$quantity',
-                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold),
                                   ),
                                   IconButton(
                                     icon: Icon(Icons.add),
-                                    onPressed: () => _updateQuantity(index, 1),
+                                    onPressed: () {
+                                      _updateQuantity(index, 1);
+                                    },
                                     color: Colors.green,
                                   ),
                                 ],
@@ -133,7 +144,7 @@ class _TransaksiPageState extends State<TransaksiPage> {
                   ),
                 ),
 
-          // Total and button section
+          // Total dan tombol untuk lanjut ke Penjualan
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: Row(
@@ -147,13 +158,16 @@ class _TransaksiPageState extends State<TransaksiPage> {
                   onPressed: () {
                     if (selectedCustomer == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Silakan pilih pelanggan terlebih dahulu!')),
+                        SnackBar(
+                            content: Text(
+                                'Silakan pilih pelanggan terlebih dahulu!')),
                       );
                     } else {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => PenjualanPage(transaksiItems: widget.transaksiItems),
+                          builder: (context) => PenjualanPage(
+                              transaksiItems: widget.transaksiItems),
                         ),
                       );
                     }
@@ -166,5 +180,11 @@ class _TransaksiPageState extends State<TransaksiPage> {
         ],
       ),
     );
+  }
+
+  void _updateQuantity(int index, int change) {
+    setState(() {
+      widget.transaksiItems[index]['quantity'] += change;
+    });
   }
 }
