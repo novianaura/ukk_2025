@@ -57,120 +57,133 @@ class _PelangganState extends State<Pelanggan> {
     });
   }
 
-  // Fungsi untuk menambahkan pelanggan
-  Future<void> _tambahPelanggan(BuildContext context) async {
-    TextEditingController nameController = TextEditingController();
-    TextEditingController addressController = TextEditingController();
-    TextEditingController phoneController = TextEditingController();
-    final _formKey = GlobalKey<FormState>();
+// Fungsi untuk menambahkan pelanggan
+Future<void> _tambahPelanggan(BuildContext context) async {
+  TextEditingController nameController = TextEditingController();
+  TextEditingController addressController = TextEditingController();
+  TextEditingController phoneController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
 
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Tambah Pelanggan', style: TextStyle(fontWeight: FontWeight.bold)),
-          content: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextFormField(
-                  controller: nameController,
-                  decoration: InputDecoration(
-                    labelText: 'Nama Pelanggan',
-                    hintText: 'Masukkan nama pelanggan',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nama kosong';
-                    }
-                    return null;
-                  },
+  showDialog(
+    context: context,
+    builder: (context) {
+      return AlertDialog(
+        title: Text('Tambah Pelanggan', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextFormField(
+                controller: nameController,
+                decoration: InputDecoration(
+                  labelText: 'Nama Pelanggan',
+                  hintText: 'Masukkan nama pelanggan',
                 ),
-                SizedBox(height: 10),
-                TextFormField(
-                  controller: addressController,
-                  decoration: InputDecoration(
-                    labelText: 'Alamat Pelanggan',
-                    hintText: 'Masukkan alamat pelanggan',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Alamat kosong';
-                    }
-                    return null;
-                  },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nama kosong';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 10),
+              TextFormField(
+                controller: addressController,
+                decoration: InputDecoration(
+                  labelText: 'Alamat Pelanggan',
+                  hintText: 'Masukkan alamat pelanggan',
                 ),
-                SizedBox(height: 10),
-                TextFormField(
-                  controller: phoneController,
-                  keyboardType: TextInputType.phone,
-                  decoration: InputDecoration(
-                    labelText: 'Nomor Telepon',
-                    hintText: 'Masukkan nomor telepon',
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Nomor telepon kosong';
-                    }
-                    return null;
-                  },
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Alamat kosong';
+                  }
+                  return null;
+                },
+              ),
+              SizedBox(height: 10),
+              TextFormField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: 'Nomor Telepon',
+                  hintText: 'Masukkan nomor telepon',
                 ),
-              ],
-            ),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Nomor telepon kosong';
+                  }
+                  return null;
+                },
+              ),
+            ],
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Batal', style: TextStyle(color: Colors.red)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
-              onPressed: () async {
-                if (_formKey.currentState?.validate() ?? false) {
-                  final name = nameController.text;
-                  final address = addressController.text;
-                  final phone = phoneController.text;
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: Text('Batal', style: TextStyle(color: Colors.red)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.blue[900]),
+            onPressed: () async {
+              if (_formKey.currentState?.validate() ?? false) {
+                final name = nameController.text;
 
-                  try {
-                    final response = await Supabase.instance.client
-                        .from('pelanggan')
-                        .insert([
-                          {
-                            'nama_pelanggan': name,
-                            'alamat': address,
-                            'nomor_telepon': phone,
-                          },
-                        ])
-                        .select();
+                // Cek apakah nama pelanggan sudah ada
+                bool isDuplicate = pelangganList.any((customer) =>
+                    customer['nama_pelanggan'].toLowerCase() == name.toLowerCase());
 
-                    if (response != null && response is List && response.isNotEmpty) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Pelanggan baru ditambahkan ke database!')),
-                      );
-                      _fetchPelanggan(); // Perbarui tampilan
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Pelanggan gagal ditambahkan.')),
-                      );
-                    }
-                    Navigator.pop(context);
-                  } catch (e) {
+                if (isDuplicate) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Nama pelanggan sudah ada!')),
+                  );
+                  Navigator.pop(context); // Tutup dialog jika duplikat
+                  return;
+                }
+
+                final address = addressController.text;
+                final phone = phoneController.text;
+
+                try {
+                  final response = await Supabase.instance.client
+                      .from('pelanggan')
+                      .insert([
+                        {
+                          'nama_pelanggan': name,
+                          'alamat': address,
+                          'nomor_telepon': phone,
+                        },
+                      ])
+                      .select();
+
+                  if (response != null && response is List && response.isNotEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error occurred: $e')),
+                      SnackBar(content: Text('Pelanggan baru ditambahkan')),
+                    );
+                    _fetchPelanggan(); // Perbarui tampilan
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Pelanggan gagal ditambahkan.')),
                     );
                   }
+                  Navigator.pop(context);
+                } catch (e) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error occurred: $e')),
+                  );
                 }
-              },
-              child: Text('Tambah', style: TextStyle(color: Colors.white)),
-            ),
-          ],
-        );
-      },
-    );
-  }
+              }
+            },
+            child: Text('Tambah', style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      );
+    },
+  );
+}
 
   // Fungsi untuk mengedit pelanggan
   Future<void> _editPelanggan(BuildContext context, Map<String, dynamic> pelanggan) async {

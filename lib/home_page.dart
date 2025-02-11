@@ -1,27 +1,71 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'login.dart';
+import 'package:ukk_2025/login.dart';
 import 'produk.dart';
 import 'pelanggan.dart';
-import 'transaksi.dart';
+import 'transaksi.dart'; // Import the Transaksi page
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title});
+  const HomePage({super.key, required this.title, required this.username, required this.role});
   final String title;
+  final String username;
+  final String role;
 
   @override
   State<HomePage> createState() => _HomePageState();
 }
-
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
+  List<Map<String, dynamic>> transaksiItems = [];
+  List<Map<String, dynamic>> customers = [];  // Menyimpan data pelanggan
+  String? username;
+  String? role;
 
-  final List<Widget> _pages = [
-    const Produk(),
-    const Center(child: Text('Transaksi')),
-    const Center(child: Text('Riwayat')),
-    const Pelanggan(),  
-  ];
+  final List<Widget> _pages = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCustomers();  // Panggil fungsi untuk mengambil data pelanggan
+
+    _pages.addAll([
+      Produk(addToTransaksi: addToTransaksi),
+      TransaksiPage(transaksiItems: transaksiItems, customers: customers),  
+      const Center(child: Text('Riwayat')),
+      const Pelanggan(),
+]);
+
+    // Ambil data user login
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      setState(() {
+        username = user.email;  // Asumsikan email digunakan sebagai username
+        role = user.userMetadata?['role'];  // Asumsikan role disimpan di metadata
+      });
+    }
+  }
+
+  // Fungsi untuk mengambil data pelanggan
+  Future<void> _fetchCustomers() async {
+    try {
+      final response = await Supabase.instance.client
+          .from('pelanggan')
+          .select();
+
+      setState(() {
+        customers = response.map<Map<String, dynamic>>((item) {
+          return {
+            'pelanggan_id': item['pelanggan_id'] ?? 0,
+            'nama_pelanggan': item['nama_pelanggan'] ?? '',
+            'alamat': item['alamat'] ?? '',
+            'nomor_telepon': item['nomor_telepon'] ?? '',
+          };
+        }).toList();
+      });
+    } catch (e) {
+      print('Error fetching customers: $e');
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -29,11 +73,73 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _logout(BuildContext context) async {
+  // Fungsi untuk menambah produk ke transaksi
+  void addToTransaksi(Map<String, dynamic> product) {
+    setState(() {
+      transaksiItems.add(product);
+    });
+  }
+
+// Perbaiki Logout dengan menggunakan pushReplacement
+Future<void> _logout() async {
+  try {
+    // Sign out from Supabase
     await Supabase.instance.client.auth.signOut();
+    
+    // Navigasi ke halaman login
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => LoginPage()),
+      MaterialPageRoute(builder: (context) => LoginPage()),  // Ganti dengan halaman login yang sesuai
+    );
+  } catch (e) {
+    print('Error logging out: $e');
+  }
+}
+
+  // Show profile dialog with username, role, and logout option
+  void _showProfileDialog() {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        child: Container(
+          width: 250,  // Set a fixed width for the dialog
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,  // Ensure the dialog is compact
+            crossAxisAlignment: CrossAxisAlignment.center,  // Center the content
+            children: [
+              CircleAvatar(
+                radius: 30,  // Smaller profile image
+                backgroundColor: Colors.blue,
+                child: Icon(Icons.person, size: 40, color: Colors.white),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Username: ${widget.username}',
+                style: TextStyle(fontWeight: FontWeight.bold),
+                textAlign: TextAlign.center,  // Center username
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Role: ${widget.role}',
+                style: TextStyle(color: Colors.grey),
+                textAlign: TextAlign.center,  // Center role
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: _logout,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blue,
+                  foregroundColor: Colors.white,  // Set text color to white
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                ),
+                child: Text('Logout'),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -56,18 +162,18 @@ class _HomePageState extends State<HomePage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Colors.black),
-            onPressed: () => _logout(context),
+            icon: const Icon(Icons.person, color: Colors.black),  // Profile icon
+            onPressed: _showProfileDialog,  // Show profile dialog when clicked
           ),
         ],
       ),
-      body: _pages[_selectedIndex], 
+      body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         selectedItemColor: Colors.blue[900],
         unselectedItemColor: Colors.grey,
-        backgroundColor: Colors.blue, 
+        backgroundColor: Colors.blue,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.shopping_cart),

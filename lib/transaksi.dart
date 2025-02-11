@@ -1,99 +1,164 @@
 import 'package:flutter/material.dart';
+import 'package:ukk_2025/penjualan.dart';
 
-class Transaksi extends StatefulWidget {
-  final List<Map<String, dynamic>> transaksiList;
+class TransaksiPage extends StatefulWidget {
+  final List<Map<String, dynamic>> transaksiItems;
 
-  const Transaksi({super.key, required this.transaksiList});
+  const TransaksiPage({Key? key, required this.transaksiItems}) : super(key: key);
 
   @override
-  _TransaksiState createState() => _TransaksiState();
+  _TransaksiPageState createState() => _TransaksiPageState();
 }
 
-class _TransaksiState extends State<Transaksi> {
-  late List<Map<String, dynamic>> transaksiList;
-  int totalHarga = 0;
+class _TransaksiPageState extends State<TransaksiPage> {
+  String? selectedCustomer;  // Variable to hold the selected customer
+  List<String> customers = ['Pelanggan 1', 'Pelanggan 2', 'Pelanggan 3']; // Example customer list
 
-  @override
-  void initState() {
-    super.initState();
-    transaksiList = widget.transaksiList;
-    print('Data transaksi yang diterima: $transaksiList'); // Debug print
-    _hitungTotal();
+  double _calculateTotal() {
+    double total = 0;
+    for (var product in widget.transaksiItems) {
+      final price = product['price'] ?? 0;
+      final quantity = product['quantity'] ?? 1;
+      total += price * quantity;
+    }
+    return total;
   }
 
-  // Menghitung total harga dari semua produk di keranjang
-  void _hitungTotal() {
-    totalHarga = transaksiList.fold(0, (int sum, item) => sum + (item["subtotal"] as int));
-  }
-
-  // Fungsi untuk mengubah jumlah produk di keranjang
-  void _ubahJumlah(int id, int newJumlah, int harga) {
+  void _updateQuantity(int index, int delta) {
     setState(() {
-      final index = transaksiList.indexWhere((item) => item['produk_id'] == id);
-      if (index != -1) {
-        transaksiList[index]['jumlah'] = newJumlah;
-        transaksiList[index]['subtotal'] = newJumlah * harga;
+      final product = widget.transaksiItems[index];
+      product['quantity'] = (product['quantity'] ?? 1) + delta;
+
+      // If the quantity is less than or equal to zero, remove the product from the list
+      if (product['quantity'] <= 0) {
+        widget.transaksiItems.removeAt(index);
+      } else {
+        // Ensure quantity does not go negative
+        product['quantity'] = product['quantity'] ?? 1;
       }
-      _hitungTotal();  // Update total harga setelah jumlah berubah
     });
-  }
-
-  // Fungsi untuk memproses pembayaran dan mengosongkan keranjang
-  void _prosesPembayaran() {
-    setState(() {
-      transaksiList.clear(); // Mengosongkan keranjang setelah pembayaran
-      totalHarga = 0; // Reset total harga
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pembayaran berhasil')),
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Transaksi")),
       body: Column(
         children: [
-          Expanded(
-            child: transaksiList.isEmpty
-                ? const Center(child: Text('Belum ada transaksi'))
-                : ListView.builder(
-                    itemCount: transaksiList.length,
+          // Customer dropdown is visible from the start
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 10),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(5),
+                border: Border.all(color: Colors.grey),
+              ),
+              child: DropdownButton<String>(
+                hint: Text("Pilih Pelanggan"),
+                value: selectedCustomer,
+                onChanged: (String? newValue) {
+                  setState(() {
+                    selectedCustomer = newValue;
+                  });
+                },
+                isExpanded: true,
+                underline: SizedBox(),
+                items: customers.map<DropdownMenuItem<String>>((String customer) {
+                  return DropdownMenuItem<String>(
+                    value: customer,
+                    child: Text(customer),
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
+
+          // Product List Section
+          widget.transaksiItems.isEmpty
+              ? Center(child: Text('Tidak ada produk di transaksi.'))
+              : Expanded(
+                  child: ListView.builder(
+                    itemCount: widget.transaksiItems.length,
                     itemBuilder: (context, index) {
-                      final item = transaksiList[index];
-                      print('Menampilkan produk: ${item['name']}');  // Debug print
-                      return ListTile(
-                        title: Text(item['name']),
-                        subtitle: Text('Subtotal: ${item['subtotal']}'),
-                        trailing: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(Icons.remove),
-                              onPressed: () => _ubahJumlah(item['produk_id'], item['jumlah'] - 1, item['price']),
-                            ),
-                            Text('${item['jumlah']}'),
-                            IconButton(
-                              icon: const Icon(Icons.add),
-                              onPressed: () => _ubahJumlah(item['produk_id'], item['jumlah'] + 1, item['price']),
-                            ),
-                          ],
+                      final product = widget.transaksiItems[index];
+                      final price = product['price'] ?? 0;
+                      final quantity = product['quantity'] ?? 1;
+                      final subtotal = price * quantity;
+
+                      return Card(
+                        key: ValueKey(index), // Use ValueKey to prevent unnecessary rebuilds
+                        margin: EdgeInsets.symmetric(vertical: 5, horizontal: 10),
+                        child: Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    product['name'],
+                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  ),
+                                  SizedBox(height: 5),
+                                  Text(
+                                    '${quantity}x Rp ${price} = Rp $subtotal',
+                                    style: TextStyle(color: Colors.grey[700]),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  IconButton(
+                                    icon: Icon(Icons.remove),
+                                    onPressed: () => _updateQuantity(index, -1),
+                                    color: Colors.red,
+                                  ),
+                                  Text(
+                                    '$quantity',
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
+                                  IconButton(
+                                    icon: Icon(Icons.add),
+                                    onPressed: () => _updateQuantity(index, 1),
+                                    color: Colors.green,
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     },
                   ),
-          ),
+                ),
+
+          // Total and button section
           Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
+            padding: const EdgeInsets.all(10.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('Total: Rp$totalHarga', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-                const SizedBox(height: 10),
+                Text(
+                  'Total: Rp ${_calculateTotal().toStringAsFixed(0)}',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
                 ElevatedButton(
-                  onPressed: _prosesPembayaran,
-                  child: const Text("Bayar"),
+                  onPressed: () {
+                    if (selectedCustomer == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Silakan pilih pelanggan terlebih dahulu!')),
+                      );
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => PenjualanPage(transaksiItems: widget.transaksiItems),
+                        ),
+                      );
+                    }
+                  },
+                  child: Text('Masukkan ke Penjualan'),
                 ),
               ],
             ),
