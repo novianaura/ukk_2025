@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ukk_2025/transaksi.dart';
 
 class Pelanggan extends StatefulWidget {
   const Pelanggan({super.key});
@@ -56,6 +57,20 @@ class _PelangganState extends State<Pelanggan> {
           .toList();
     });
   }
+
+  // Fungsi untuk menavigasi ke halaman Transaksi dan mengirimkan data pelanggan
+      void _navigateToTransaksiPage(List<Map<String, dynamic>> selectedItems) {
+        print(filteredCustomers); 
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TransaksiPage(
+              transaksiItems: selectedItems,
+              customers: filteredCustomers, // Kirimkan daftar pelanggan ke TransaksiPage
+            ),
+          ),
+        );
+      }
 
 // Fungsi untuk menambahkan pelanggan
 Future<void> _tambahPelanggan(BuildContext context) async {
