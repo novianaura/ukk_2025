@@ -154,7 +154,7 @@ Future<void> _tambahPelanggan(BuildContext context) async {
 
                 if (isDuplicatePhone) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Nomor telepon sudah digunakan!')),
+                    SnackBar(content: Text('Nama dan Nomor telepon sudah digunakan!')),
                   );
                   Navigator.pop(context); // Tutup dialog jika duplikat
                   return;
