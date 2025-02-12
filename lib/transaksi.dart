@@ -4,8 +4,9 @@ import 'package:ukk_2025/riwayat.dart';
 
 class TransaksiPage extends StatefulWidget {
   final List<Map<String, dynamic>> transaksiItems;
+  final List<Map<String, dynamic>> customers; // Added customers parameter
 
-  const TransaksiPage({super.key, required this.transaksiItems, required List<Map<String, dynamic>> customers});
+  const TransaksiPage({super.key, required this.transaksiItems, required this.customers});
 
   @override
   _TransaksiPageState createState() => _TransaksiPageState();
@@ -48,6 +49,7 @@ class _TransaksiPageState extends State<TransaksiPage> {
     return total;
   }
 
+
   // Fungsi untuk mengupdate quantity produk
   void _updateQuantity(int index, int delta) {
     if (!mounted) return; // Cegah perubahan state jika widget tidak aktif
@@ -57,6 +59,23 @@ class _TransaksiPageState extends State<TransaksiPage> {
       transaksiList[index]['quantity'] = newQuantity > 0 ? newQuantity : 1;
     });
   }
+  void addToTransaksi(Map<String, dynamic> product) {
+  setState(() {
+    // Cek apakah produk sudah ada dalam transaksiList berdasarkan produk_id
+    final existingProductIndex = transaksiList.indexWhere((item) => item['produk_id'] == product['produk_id']);
+    if (existingProductIndex >= 0) {
+      // Jika sudah ada, update quantity produk yang ada
+      transaksiList[existingProductIndex]['quantity']++;
+    } else {
+      // Jika belum ada, tambahkan produk baru dengan quantity 1
+      transaksiList.add({
+        ...product,
+        'quantity': 1, // Set quantity awal 1
+      });
+    }
+  });
+}
+
 
   @override
   Widget build(BuildContext context) {
