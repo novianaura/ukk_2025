@@ -7,7 +7,11 @@ import 'pelanggan.dart';
 import 'transaksi.dart'; // Import the Transaksi page
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.title, required this.username, required this.role});
+  const HomePage(
+      {super.key,
+      required this.title,
+      required this.username,
+      required this.role});
   final String title;
   final String username;
   final String role;
@@ -15,10 +19,11 @@ class HomePage extends StatefulWidget {
   @override
   State<HomePage> createState() => _HomePageState();
 }
+
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
   List<Map<String, dynamic>> transaksiItems = [];
-  List<Map<String, dynamic>> customers = [];  // Menyimpan data pelanggan
+  List<Map<String, dynamic>> customers = []; // Menyimpan data pelanggan
   String? username;
   String? role;
 
@@ -27,21 +32,23 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _fetchCustomers();  // Panggil fungsi untuk mengambil data pelanggan
+    _fetchCustomers(); // Panggil fungsi untuk mengambil data pelanggan
 
     _pages.addAll([
   Produk(addToTransaksi: addToTransaksi),
-  TransaksiPage(transaksiItems: transaksiItems, customers: customers),  
-  RiwayatPage(transaksiItems: transaksiItems), // Perbaiki disini
+  TransaksiPage(transaksiItems: transaksiItems, customers: customers),
+  RiwayatPage(transaksiItems: transaksiItems),
   const Pelanggan(),
 ]);
+
 
     // Ambil data user login
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
       setState(() {
-        username = user.email;  // Asumsikan email digunakan sebagai username
-        role = user.userMetadata?['role'];  // Asumsikan role disimpan di metadata
+        username = user.email; // Asumsikan email digunakan sebagai username
+        role =
+            user.userMetadata?['role']; // Asumsikan role disimpan di metadata
       });
     }
   }
@@ -49,9 +56,8 @@ class _HomePageState extends State<HomePage> {
   // Fungsi untuk mengambil data pelanggan
   Future<void> _fetchCustomers() async {
     try {
-      final response = await Supabase.instance.client
-          .from('pelanggan')
-          .select();
+      final response =
+          await Supabase.instance.client.from('pelanggan').select();
 
       setState(() {
         customers = response.map<Map<String, dynamic>>((item) {
@@ -75,27 +81,37 @@ class _HomePageState extends State<HomePage> {
   }
 
   // Fungsi untuk menambah produk ke transaksi
-  void addToTransaksi(Map<String, dynamic> product) {
-    setState(() {
-      transaksiItems.add(product);
-    });
-  }
+void addToTransaksi(Map<String, dynamic> product) {
+  setState(() {
+    // Cek apakah produk sudah ada dalam transaksi
+    int index = transaksiItems.indexWhere((item) => item['id'] == product['id']);
+    if (index != -1) {
+      // Jika sudah ada, tambah jumlahnya
+      transaksiItems[index]['quantity'] += 1;
+    } else {
+      // Jika belum ada, tambahkan dengan quantity = 1
+      transaksiItems.add({...product, 'quantity': 1});
+    }
+  });
+}
 
 // Perbaiki Logout dengan menggunakan pushReplacement
-Future<void> _logout() async {
-  try {
-    // Sign out from Supabase
-    await Supabase.instance.client.auth.signOut();
-    
-    // Navigasi ke halaman login
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => LoginPage()),  // Ganti dengan halaman login yang sesuai
-    );
-  } catch (e) {
-    print('Error logging out: $e');
+  Future<void> _logout() async {
+    try {
+      // Sign out from Supabase
+      await Supabase.instance.client.auth.signOut();
+
+      // Navigasi ke halaman login
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (context) =>
+                LoginPage()), // Ganti dengan halaman login yang sesuai
+      );
+    } catch (e) {
+      print('Error logging out: $e');
+    }
   }
-}
 
   // Show profile dialog with username, role, and logout option
   void _showProfileDialog() {
@@ -104,14 +120,14 @@ Future<void> _logout() async {
       builder: (context) => Dialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Container(
-          width: 250,  // Set a fixed width for the dialog
+          width: 250, // Set a fixed width for the dialog
           padding: const EdgeInsets.all(16),
           child: Column(
-            mainAxisSize: MainAxisSize.min,  // Ensure the dialog is compact
-            crossAxisAlignment: CrossAxisAlignment.center,  // Center the content
+            mainAxisSize: MainAxisSize.min, // Ensure the dialog is compact
+            crossAxisAlignment: CrossAxisAlignment.center, // Center the content
             children: [
               CircleAvatar(
-                radius: 30,  // Smaller profile image
+                radius: 30, // Smaller profile image
                 backgroundColor: Colors.blue,
                 child: Icon(Icons.person, size: 40, color: Colors.white),
               ),
@@ -119,21 +135,22 @@ Future<void> _logout() async {
               Text(
                 'Username: ${widget.username}',
                 style: TextStyle(fontWeight: FontWeight.bold),
-                textAlign: TextAlign.center,  // Center username
+                textAlign: TextAlign.center, // Center username
               ),
               const SizedBox(height: 8),
               Text(
                 'Role: ${widget.role}',
                 style: TextStyle(color: Colors.grey),
-                textAlign: TextAlign.center,  // Center role
+                textAlign: TextAlign.center, // Center role
               ),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: _logout,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blue,
-                  foregroundColor: Colors.white,  // Set text color to white
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  foregroundColor: Colors.white, // Set text color to white
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8)),
                 ),
                 child: Text('Logout'),
               ),
@@ -163,8 +180,8 @@ Future<void> _logout() async {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.person, color: Colors.black),  // Profile icon
-            onPressed: _showProfileDialog,  // Show profile dialog when clicked
+            icon: const Icon(Icons.person, color: Colors.black), // Profile icon
+            onPressed: _showProfileDialog, // Show profile dialog when clicked
           ),
         ],
       ),
